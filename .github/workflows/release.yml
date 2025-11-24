@@ -61,4 +61,4 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           mvn clean verify
-          mvn deploy -DskipTests
+          mvn deploy -X -DskipTests
