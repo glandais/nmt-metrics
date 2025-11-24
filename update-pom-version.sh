@@ -11,6 +11,6 @@ fi
 echo "Updating pom.xml version to $NEW_VERSION"
 
 # Update version in pom.xml using mvn versions plugin
-mvn versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false
+mvn -B versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false
 
 echo "Version updated successfully to $NEW_VERSION"
