@@ -6,9 +6,9 @@ public enum NativeMemoryTrackingKind {
 
     COMMITTED("committed memory (real memory used)");
 
-    private String comment;
+    private final String comment;
 
-    private NativeMemoryTrackingKind(String comment) {
+    NativeMemoryTrackingKind(final String comment) {
         this.comment = comment;
     }
 

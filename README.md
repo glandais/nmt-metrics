@@ -15,9 +15,9 @@ Diagnosing and debugging OOM errors with Java applications in Cloud Foundry or i
 
 ```xml
 <dependency>
-    <groupId>io.github.glandais-eptica</groupId>
+    <groupId>io.github.glandais</groupId>
     <artifactId>nmt-metrics</artifactId>
-    <version>2.0.5</version>
+    <version>2.0.6</version>
 </dependency>
 ```
 

@@ -1,6 +1,6 @@
 package com.marekcabaj.nmt.jcmd;
 
-import java.util.EnumMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingType;
 import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
 
 class NMTPropertiesExtractor {
@@ -30,10 +29,10 @@ class NMTPropertiesExtractor {
         super();
     }
 
-    public NativeMemoryTrackingValues extractFromJcmdOutput(String jcmdOutput) {
-        NativeMemoryTrackingValues result = new NativeMemoryTrackingValues();
-        for (NativeMemoryTrackingKind nmtKind : NativeMemoryTrackingKind.values()) {
-            result.put(nmtKind, new EnumMap<NativeMemoryTrackingType, Long>(NativeMemoryTrackingType.class));
+    public NativeMemoryTrackingValues extractFromJcmdOutput(final String jcmdOutput) {
+        final NativeMemoryTrackingValues result = new NativeMemoryTrackingValues();
+        for (final NativeMemoryTrackingKind nmtKind : NativeMemoryTrackingKind.values()) {
+            result.put(nmtKind, new TreeMap<>());
         }
         extractTotalProperty(result, jcmdOutput);
         extractAllCategories(result, jcmdOutput);
@@ -46,28 +45,28 @@ class NMTPropertiesExtractor {
         return result;
     }
 
-    protected void extractAllCategories(NativeMemoryTrackingValues result, String jcmdOutput) {
-        Matcher matcher = CATEGORY_PATTERN.matcher(jcmdOutput);
+    protected void extractAllCategories(final NativeMemoryTrackingValues result, final String jcmdOutput) {
+        final Matcher matcher = CATEGORY_PATTERN.matcher(jcmdOutput);
         while (matcher.find()) {
-            String categoryString = matcher.group(CATEGORY_PROPERTY);
-            NativeMemoryTrackingType category = NativeMemoryTrackingType.getByLabel(categoryString);
+            final String categoryString = matcher.group(CATEGORY_PROPERTY);
+            final String category = categoryString.replace(' ', '.').toLowerCase();
 
-            long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
+            final long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
             result.get(NativeMemoryTrackingKind.COMMITTED).put(category, committed);
 
-            long reserved = Long.parseLong(matcher.group(RESERVED_PROPERTY));
+            final long reserved = Long.parseLong(matcher.group(RESERVED_PROPERTY));
             result.get(NativeMemoryTrackingKind.RESERVED).put(category, reserved);
         }
     }
 
-    protected void extractTotalProperty(NativeMemoryTrackingValues result, String jcmdOutput) {
-        Matcher matcher = TOTAL_PATTERN.matcher(jcmdOutput);
+    protected void extractTotalProperty(final NativeMemoryTrackingValues result, final String jcmdOutput) {
+        final Matcher matcher = TOTAL_PATTERN.matcher(jcmdOutput);
         if (matcher.find()) {
-            long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
-            result.get(NativeMemoryTrackingKind.COMMITTED).put(NativeMemoryTrackingType.TOTAL, committed);
+            final long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
+            result.get(NativeMemoryTrackingKind.COMMITTED).put("total", committed);
 
-            long reserved = Long.parseLong(matcher.group(RESERVED_PROPERTY));
-            result.get(NativeMemoryTrackingKind.RESERVED).put(NativeMemoryTrackingType.TOTAL, reserved);
+            final long reserved = Long.parseLong(matcher.group(RESERVED_PROPERTY));
+            result.get(NativeMemoryTrackingKind.RESERVED).put("total", reserved);
         }
     }
 

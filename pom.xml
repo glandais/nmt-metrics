@@ -5,18 +5,18 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.6.RELEASE</version>
+        <version>3.5.8</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>io.github.glandais-eptica</groupId>
+    <groupId>io.github.glandais</groupId>
     <artifactId>nmt-metrics</artifactId>
     <version>2.0.6-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>NMT tools to expose JVM native memory tracking informations in Micrometer</description>
-    <url>https://github.com/glandais-eptica/nmt-metrics</url>
+    <url>https://github.com/glandais/nmt-metrics</url>
 
     <licenses>
         <license>
@@ -32,30 +32,19 @@
         </developer>
         <developer>
             <name>Gabriel Landais</name>
-            <url>https://github.com/glandais-eptica</url>
+            <url>https://github.com/glandais</url>
         </developer>
     </developers>
 
     <scm>
-        <url>http://github.com/glandais-eptica/nmt-metrics</url>
-        <connection>scm:git:git://github.com/glandais-eptica/nmt-metrics.git</connection>
-        <developerConnection>scm:git:git@github.com:glandais-eptica/nmt-metrics.git</developerConnection>
+        <url>http://github.com/glandais/nmt-metrics</url>
+        <connection>scm:git:git://github.com/glandais/nmt-metrics.git</connection>
+        <developerConnection>scm:git:git@github.com:glandais/nmt-metrics.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -79,24 +68,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

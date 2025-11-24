@@ -12,11 +12,11 @@ class JcmdCommandRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JcmdCommandRunner.class);
 
-    private String jcmdCmd;
+    private final String jcmdCmd;
 
-    private File jcmdDirectory;
+    private final File jcmdDirectory;
 
-    private String pid;
+    private final String pid;
 
     public JcmdCommandRunner() {
         super();
@@ -24,13 +24,15 @@ class JcmdCommandRunner {
         if (this.pid == null) {
             LOGGER.error("Unable to retrieve pid!");
             this.jcmdCmd = null;
+            this.jcmdDirectory = null;
             return;
         }
-        String javaHome = System.getProperty("java.home");
+        final String javaHome = System.getProperty("java.home");
         this.jcmdDirectory = new File(javaHome + File.separator + "bin");
-        String os = System.getProperty("os.name").toLowerCase();
-        boolean isUnix = os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0;
-        boolean isWindows = os.indexOf("win") >= 0;
+        final String os = System.getProperty("os.name").toLowerCase();
+        final boolean isUnix = os.contains("nix")
+            || os.contains("nux") || os.contains("mac os x");
+        final boolean isWindows = os.contains("win");
         if (isUnix) {
             jcmdCmd = "./jcmd";
         } else if (isWindows) {
@@ -43,40 +45,40 @@ class JcmdCommandRunner {
 
     private String getPid() {
         try {
-            String jvmName = ManagementFactory.getRuntimeMXBean().getName();
+            final String jvmName = ManagementFactory.getRuntimeMXBean().getName();
             return jvmName.split("@")[0];
-        } catch (Throwable ex) {
+        } catch (final Exception ex) {
             return null;
         }
     }
 
-    public String runJcmdCommand(String command) {
+    public String runJcmdCommand(final String command) {
         if (jcmdCmd == null) {
             return "";
         }
-        ProcessBuilder builder = new ProcessBuilder(jcmdCmd, pid, command);
+        final ProcessBuilder builder = new ProcessBuilder(jcmdCmd, pid, command);
         builder.directory(jcmdDirectory);
-        String cmd = builder.command().toString();
+        final String cmd = builder.command().toString();
         LOGGER.debug("Running command : {}", cmd);
         builder.redirectErrorStream(true);
         try {
-            Process process = builder.start();
-            String output = readCommandOutput(process);
+            final Process process = builder.start();
+            final String output = readCommandOutput(process);
             LOGGER.debug("Output of command {} : {}", cmd, output);
             return output;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOGGER.error("Error while starting command : {}", cmd, e);
             return "";
         }
     }
 
-    protected String readCommandOutput(Process process) throws IOException {
-        StringBuilder sb = new StringBuilder();
+    protected String readCommandOutput(final Process process) {
+        final StringBuilder sb = new StringBuilder();
         // scanner will close input stream
-        try (Scanner scanner = new Scanner(process.getInputStream())) {
+        try (final Scanner scanner = new Scanner(process.getInputStream())) {
             while (scanner.hasNextLine()) {
                 sb.append(scanner.nextLine());
-                sb.append(System.getProperty("line.separator"));
+                sb.append(System.lineSeparator());
             }
         }
         return sb.toString();
