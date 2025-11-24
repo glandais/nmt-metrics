@@ -29,8 +29,8 @@ jobs:
           cache: 'maven'
           settings-path: "."
           server-id: central
-          server-username: ${{ secrets.CENTRAL_USERNAME }}
-          server-password: ${{ secrets.CENTRAL_TOKEN }}
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
