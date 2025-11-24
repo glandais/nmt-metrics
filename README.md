@@ -1,5 +1,9 @@
 ﻿# Native Memory Tracking (NMT) of Container memory for Java Applications
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.glandais/nmt-metrics.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.glandais/nmt-metrics)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://github.com/glandais/nmt-metrics/actions/workflows/release.yml/badge.svg)](https://github.com/glandais/nmt-metrics/actions/workflows/release.yml)
+
 ## What does this Library do ?
 This library adds custom java [native memory tracking](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html) metrics to [Micrometer](https://micrometer.io/) (hence to the [Spring Boot actuator metrics](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html)).  
 
@@ -13,12 +17,19 @@ Diagnosing and debugging OOM errors with Java applications in Cloud Foundry or i
 
 ## Include library in your project
 
+The library is available on Maven Central. Check the badge above for the latest version.
+
 ```xml
 <dependency>
     <groupId>io.github.glandais</groupId>
     <artifactId>nmt-metrics</artifactId>
-    <version>2.0.6</version>
+    <version><!-- Check Maven Central badge for latest version --></version>
 </dependency>
+```
+
+Gradle:
+```gradle
+implementation 'io.github.glandais:nmt-metrics:<!-- latest version -->'
 ```
 
 ## Non Spring usage
@@ -65,4 +76,16 @@ Start the JVM with command line option: `-XX:NativeMemoryTracking=summary`.
     * `jvm.memory.nmt.committed{category="java.heap"}` : Committed memory for Java instances
 
 If metrics are exposed with Prometheus, `jvm_memory_nmt_committed_bytes{category="thread"}` will display thread memory usage for instance.
+
+# Contributing
+
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release) for automated versioning and publishing to Maven Central.
+
+Please use [Conventional Commits](https://www.conventionalcommits.org/) format for your commit messages:
+- `feat:` for new features (minor version bump)
+- `fix:` for bug fixes (patch version bump)
+- `BREAKING CHANGE:` or `!` suffix for breaking changes (major version bump)
+- `docs:`, `style:`, `refactor:`, `test:`, `chore:` for non-releasing changes
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
