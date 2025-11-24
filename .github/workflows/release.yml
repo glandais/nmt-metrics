@@ -39,42 +39,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup GPG for signing
-        if: success()
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          set -euo pipefail
-
-          # Ensure gnupg2 is available
-          sudo apt-get update -y
-          sudo apt-get install -y gnupg2
-
-          # Create isolated GNUPGHOME for the job
-          export GNUPGHOME="$(mktemp -d)"
-          chmod 700 "$GNUPGHOME"
-          echo "Using GNUPGHOME=$GNUPGHOME"
-
-          # Import the private key (ASCII-armored) non-interactively
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-
-          # Allow loopback pinentry so GPG can accept passphrase non-interactively
-          printf 'allow-loopback-pinentry\n' >> "$GNUPGHOME/gpg-agent.conf"
-          printf 'pinentry-mode loopback\n' >> "$GNUPGHOME/gpg.conf"
-          chmod 600 "$GNUPGHOME/gpg-agent.conf" "$GNUPGHOME/gpg.conf" || true
-
-          # Restart gpg-agent to pick up config
-          gpgconf --kill gpg-agent || true
-          sleep 1
-
-          # Optional: list keys for debug (will not expose private secret material)
-          gpg --list-secret-keys --keyid-format LONG
-
-          # Export values to subsequent steps
-          echo "GNUPGHOME=$GNUPGHOME" >> $GITHUB_ENV
-          echo "MAVEN_GPG_PASSPHRASE=$GPG_PASSPHRASE" >> $GITHUB_ENV
-
       - name: Install dependencies
         run: npm ci
 
@@ -86,16 +50,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: npx semantic-release
 
       - name: Build and publish to Maven Central
         if: success()
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           mvn clean verify
           # pass the passphrase explicitly as a system property as an extra fallback
-          mvn deploy -X -e -DskipTests -Dgpg.passphrase="${MAVEN_GPG_PASSPHRASE}"
+          mvn deploy -X -e -DskipTests
