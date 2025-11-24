@@ -27,6 +27,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+          settings-path: settings.xml
+          server-id: central
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -51,9 +55,9 @@ jobs:
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
-          settings_path: "deploy/settings/settings.xml"
-          server_id: central
+          settings_path: settings.xml
           maven_profiles: ""
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          server_id: central
           server_username: ${{ secrets.CENTRAL_USERNAME }}
           server_password: ${{ secrets.CENTRAL_TOKEN }}
