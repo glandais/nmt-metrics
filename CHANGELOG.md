@@ -1,3 +1,9 @@
+## [3.3.0](https://github.com/glandais/nmt-metrics/compare/v3.2.13...v3.3.0) (2025-11-24)
+
+### Features
+
+* readme ([8160c14](https://github.com/glandais/nmt-metrics/commit/8160c14c9cc2210154df1ef222c2bb15a985f38a))
+
 ## [3.2.13](https://github.com/glandais/nmt-metrics/compare/v3.2.12...v3.2.13) (2025-11-24)
 
 ### Bug Fixes
