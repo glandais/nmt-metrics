@@ -118,6 +118,8 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
+                            <!-- Read passphrase from environment (set in workflow) -->
+                            <passphrase>${env.MAVEN_GPG_PASSPHRASE}</passphrase>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
