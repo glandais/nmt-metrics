@@ -1,12 +1,11 @@
 package com.marekcabaj.nmt.jcmd;
 
-import static org.junit.Assert.assertEquals;
-
+import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
+import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
+import static org.junit.Assert.assertEquals;
 
 public class NMTExtractorTest {
 
@@ -14,48 +13,47 @@ public class NMTExtractorTest {
 
     @Before
     public void setUp() {
-     final String testJcmdOutput = """
-Total: reserved=1470626KB, committed=170826KB
--                 Java Heap (reserved=65536KB, committed=46592KB)
-                            (mmap: reserved=65536KB, committed=46592KB) 
- 
--                     Class (reserved=1081294KB, committed=36814KB)
-                            (classes #5962)
-                            (malloc=4046KB #6901) 
-                            (mmap: reserved=1077248KB, committed=32768KB) 
- 
--                    Thread (reserved=22009KB, committed=22009KB)
-                            (thread #22)
-                            (stack: reserved=21504KB, committed=21504KB)
-                            (malloc=65KB #112) 
-                            (arena=440KB #42)
- 
--                      Code (reserved=252309KB, committed=16101KB)
-                            (malloc=2709KB #3757) 
-                            (mmap: reserved=249600KB, committed=13392KB) 
- 
--                        GC (reserved=6028KB, committed=5860KB)
-                            (malloc=3468KB #184) 
-                            (mmap: reserved=2560KB, committed=2392KB) 
- 
--                  Compiler (reserved=8424KB, committed=8424KB)
-                            (malloc=9KB #111) 
-                            (arena=8415KB #8)
- 
--                  Internal (reserved=4155KB, committed=4155KB)
-                            (malloc=4091KB #7583) 
-                            (mmap: reserved=64KB, committed=64KB) 
- 
--                    Symbol (reserved=9378KB, committed=9378KB)
-                            (malloc=6557KB #58783) 
-                            (arena=2821KB #1)
- 
--    Native Memory Tracking (reserved=1232KB, committed=1232KB)
-                            (malloc=5KB #66) 
-                            (tracking overhead=1227KB)
- 
--               Arena Chunk (reserved=20262KB, committed=20262KB)
-                            (malloc=20262KB) """;
+        final String testJcmdOutput = "Total: reserved=1470626KB, committed=170826KB\n" +
+                "-                 Java Heap (reserved=65536KB, committed=46592KB)\n" +
+                "                            (mmap: reserved=65536KB, committed=46592KB) \n" +
+                " \n" +
+                "-                     Class (reserved=1081294KB, committed=36814KB)\n" +
+                "                            (classes #5962)\n" +
+                "                            (malloc=4046KB #6901) \n" +
+                "                            (mmap: reserved=1077248KB, committed=32768KB) \n" +
+                " \n" +
+                "-                    Thread (reserved=22009KB, committed=22009KB)\n" +
+                "                            (thread #22)\n" +
+                "                            (stack: reserved=21504KB, committed=21504KB)\n" +
+                "                            (malloc=65KB #112) \n" +
+                "                            (arena=440KB #42)\n" +
+                " \n" +
+                "-                      Code (reserved=252309KB, committed=16101KB)\n" +
+                "                            (malloc=2709KB #3757) \n" +
+                "                            (mmap: reserved=249600KB, committed=13392KB) \n" +
+                " \n" +
+                "-                        GC (reserved=6028KB, committed=5860KB)\n" +
+                "                            (malloc=3468KB #184) \n" +
+                "                            (mmap: reserved=2560KB, committed=2392KB) \n" +
+                " \n" +
+                "-                  Compiler (reserved=8424KB, committed=8424KB)\n" +
+                "                            (malloc=9KB #111) \n" +
+                "                            (arena=8415KB #8)\n" +
+                " \n" +
+                "-                  Internal (reserved=4155KB, committed=4155KB)\n" +
+                "                            (malloc=4091KB #7583) \n" +
+                "                            (mmap: reserved=64KB, committed=64KB) \n" +
+                " \n" +
+                "-                    Symbol (reserved=9378KB, committed=9378KB)\n" +
+                "                            (malloc=6557KB #58783) \n" +
+                "                            (arena=2821KB #1)\n" +
+                " \n" +
+                "-    Native Memory Tracking (reserved=1232KB, committed=1232KB)\n" +
+                "                            (malloc=5KB #66) \n" +
+                "                            (tracking overhead=1227KB)\n" +
+                " \n" +
+                "-               Arena Chunk (reserved=20262KB, committed=20262KB)\n" +
+                "                            (malloc=20262KB) ";
         nmtProperties = new NMTPropertiesExtractor().extractFromJcmdOutput(testJcmdOutput);
     }
 

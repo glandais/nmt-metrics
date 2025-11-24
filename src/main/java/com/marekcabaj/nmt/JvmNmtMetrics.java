@@ -1,31 +1,20 @@
 package com.marekcabaj.nmt;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
-import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
 import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
 import com.marekcabaj.nmt.jcmd.NMTJcmdRetriever;
-
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class JvmNmtMetrics implements MeterBinder {
 
@@ -37,7 +26,26 @@ public class JvmNmtMetrics implements MeterBinder {
 
     private final NMTJcmdRetriever nmtJcmdRetriever;
 
-    private final LoadingCache<@NonNull String, NativeMemoryTrackingValues> nativeMemoryTrackingValuesCache;
+    private final Duration cacheDuration;
+
+    private volatile CachedValue cachedValue;
+
+    /**
+     * Internal class to hold cached NMT values with expiration timestamp
+     */
+    private static class CachedValue {
+        final NativeMemoryTrackingValues value;
+        final long expiryTimeMillis;
+
+        CachedValue(final NativeMemoryTrackingValues value, final long expiryTimeMillis) {
+            this.value = value;
+            this.expiryTimeMillis = expiryTimeMillis;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() >= expiryTimeMillis;
+        }
+    }
 
     public JvmNmtMetrics() {
         this(Duration.ofSeconds(10L));
@@ -47,8 +55,7 @@ public class JvmNmtMetrics implements MeterBinder {
         super();
         this.meters = Collections.synchronizedMap(new TreeMap<>());
         this.nmtJcmdRetriever = new NMTJcmdRetriever();
-        this.nativeMemoryTrackingValuesCache = Caffeine.newBuilder().expireAfterWrite(cacheDuration)
-                .build(this::computeVmNativeMemorySummary);
+        this.cacheDuration = cacheDuration;
     }
 
     @Override
@@ -61,11 +68,33 @@ public class JvmNmtMetrics implements MeterBinder {
     }
 
     protected NativeMemoryTrackingValues getVmNativeMemorySummary() {
-        return this.nativeMemoryTrackingValuesCache.get(NMTJcmdRetriever.VM_NATIVE_MEMORY_SUMMARY_COMMAND);
+        CachedValue cached = this.cachedValue;
+
+        // Check if cache is empty or expired (without synchronization for performance)
+        if (cached == null || cached.isExpired()) {
+            synchronized (this) {
+                // Double-check after acquiring lock
+                cached = this.cachedValue;
+                if (cached == null || cached.isExpired()) {
+                    // Compute new value
+                    final NativeMemoryTrackingValues value = computeVmNativeMemorySummary();
+
+                    // Calculate expiry time
+                    final long expiryTime = System.currentTimeMillis() + cacheDuration.toMillis();
+
+                    // Update cache
+                    this.cachedValue = new CachedValue(value, expiryTime);
+
+                    return value;
+                }
+            }
+        }
+
+        return cached.value;
     }
 
-    protected NativeMemoryTrackingValues computeVmNativeMemorySummary(final String command) {
-        final NativeMemoryTrackingValues result = this.nmtJcmdRetriever.retrieveNativeMemoryTrackingValues(command);
+    protected NativeMemoryTrackingValues computeVmNativeMemorySummary() {
+        final NativeMemoryTrackingValues result = this.nmtJcmdRetriever.retrieveNativeMemoryTrackingValues();
         updateMeters(result);
         return result;
     }

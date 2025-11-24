@@ -16,8 +16,9 @@ public class NMTJcmdRetriever {
         this.nmtPropertiesExtractor = new NMTPropertiesExtractor();
     }
 
-    public NativeMemoryTrackingValues retrieveNativeMemoryTrackingValues(final String command) {
-        final String output = this.jcmdCommandRunner.runJcmdCommand(command);
+    public NativeMemoryTrackingValues retrieveNativeMemoryTrackingValues() {
+        final String output = this.jcmdCommandRunner.runJcmdCommand(
+                NMTJcmdRetriever.VM_NATIVE_MEMORY_SUMMARY_COMMAND);
         return this.nmtPropertiesExtractor.extractFromJcmdOutput(output);
     }
 }
