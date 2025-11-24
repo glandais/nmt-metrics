@@ -73,7 +73,17 @@ The library uses lightweight time-based caching (10-second default TTL) to optim
 
 # Usage
 
-## Include library in your project
+## Prerequisites
+
+Before using this library, ensure:
+
+✅ Java 11+ installed
+✅ JVM started with `-XX:NativeMemoryTracking=summary` flag
+✅ Micrometer registry available in your application
+
+**⚠️ Critical**: Without the NMT flag, metrics will show -1 values!
+
+## Installation
 
 The library is available on Maven Central. Check the badge above for the latest version.
 
@@ -90,54 +100,303 @@ Gradle:
 implementation 'io.github.glandais:nmt-metrics:<!-- latest version -->'
 ```
 
-## Non Spring usage
+## Integration
 
-Create a `JvmNmtMetrics` instance and bind it to the global registry:
+### Non-Spring Applications
+
+Create a `JvmNmtMetrics` instance and bind it to your Micrometer registry:
 
 ```java
+import com.marekcabaj.nmt.JvmNmtMetrics;
+import io.micrometer.core.instrument.Metrics;
+import java.time.Duration;
+
 public class MyProgram {
     public static void main(String[] args) {
+        // Default configuration (10-second cache)
         new JvmNmtMetrics().bindTo(Metrics.globalRegistry);
-        //...
+
+        // Or with custom cache duration
+        new JvmNmtMetrics(Duration.ofSeconds(30)).bindTo(Metrics.globalRegistry);
+
+        // Your application code...
     }
 }
 ```
 
-## Spring Boot usage
+### Spring Boot Applications
 
 Add a `JvmNmtMetrics` bean in your context via a `@Configuration`:
 
 ```java
+import com.marekcabaj.nmt.JvmNmtMetrics;
+import io.micrometer.core.instrument.MeterBinder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import java.time.Duration;
+
 @Configuration
 public class JvmMetricsConfiguration {
+
     @Bean
     public MeterBinder jvmNmtMetrics() {
+        // Default 10-second cache (recommended for most cases)
         return new JvmNmtMetrics();
+
+        // Or customize based on your Prometheus scrape interval
+        // return new JvmNmtMetrics(Duration.ofSeconds(15));
     }
 }
 ```
 
-## Start JVM with option
+**Note**: Cache duration should match or slightly exceed your metrics scrape interval to minimize jcmd overhead while keeping data fresh.
 
-Start the JVM with command line option: `-XX:NativeMemoryTracking=summary`.
+## JVM Configuration
 
-## Use NMT gauges
+The JVM must be started with Native Memory Tracking enabled. Add this flag to your JVM startup arguments:
 
-[Gauges](https://docs.micrometer.io/micrometer/reference/concepts/gauges.html) are added to Micrometer :
+```
+-XX:NativeMemoryTracking=summary
+```
 
+### Platform-Specific Configuration
 
-* `jvm.memory.nmt.reserved` : Reserved memory gauges, total or per category
-    * `jvm.memory.nmt.reserved{category="total"}` : Total reserved memory
-    * `jvm.memory.nmt.reserved{category="java.heap"}` : Reserved memory for Java instances
-* `jvm.memory.nmt.committed` : Committed memory gauges, total or per category
-    * `jvm.memory.nmt.committed{category="total"}` : Total committed memory (the "real" memory usage of JVM process)
-    * `jvm.memory.nmt.committed{category="java.heap"}` : Committed memory for Java instances
+**IDE (IntelliJ IDEA, Eclipse):**
+```
+VM options: -XX:NativeMemoryTracking=summary
+```
 
-**Categories** are dynamically extracted from jcmd output and may include: `total`, `java.heap`, `class`, `thread`, `code`, `gc`, `compiler`, `internal`, `symbol`, `native.memory.tracking`, `arena.chunk`, and others depending on your JVM version and configuration.
+**Maven (Surefire/Failsafe plugins):**
+```xml
+<plugin>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <argLine>-XX:NativeMemoryTracking=summary</argLine>
+    </configuration>
+</plugin>
+```
 
-**Note**: The [NativeMemoryTrackingKind](src/main/java/com/marekcabaj/nmt/bean/NativeMemoryTrackingKind.java) enum defines the metric types (`RESERVED` and `COMMITTED`), not the category names.
+**Gradle:**
+```gradle
+tasks.withType(Test) {
+    jvmArgs '-XX:NativeMemoryTracking=summary'
+}
+```
 
-If metrics are exposed with Prometheus, `jvm_memory_nmt_committed_bytes{category="thread"}` will display thread memory usage for instance.
+**Spring Boot Maven Plugin:**
+```xml
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <jvmArguments>-XX:NativeMemoryTracking=summary</jvmArguments>
+    </configuration>
+</plugin>
+```
+
+**Docker:**
+```dockerfile
+ENV JAVA_OPTS="-XX:NativeMemoryTracking=summary"
+CMD ["java", "-XX:NativeMemoryTracking=summary", "-jar", "app.jar"]
+```
+
+**Kubernetes:**
+```yaml
+env:
+- name: JAVA_OPTS
+  value: "-XX:NativeMemoryTracking=summary"
+```
+
+**Command Line:**
+```bash
+java -XX:NativeMemoryTracking=summary -jar your-app.jar
+```
+
+## Understanding the Metrics
+
+This library exposes [Micrometer gauges](https://docs.micrometer.io/micrometer/reference/concepts/gauges.html) for Native Memory Tracking data.
+
+### Metric Types
+
+**`jvm.memory.nmt.reserved`** - Memory reserved by the OS for JVM use (upper bound)
+- Unit: bytes
+- Tag: `category` (dynamically discovered)
+- Example: `jvm_memory_nmt_reserved_bytes{category="total"} 1505280000`
+
+**`jvm.memory.nmt.committed`** - Memory actually used by JVM (current usage)
+- Unit: bytes
+- Tag: `category` (dynamically discovered)
+- Example: `jvm_memory_nmt_committed_bytes{category="thread"} 22537216`
+
+**Key Difference**:
+- **Reserved** = What the OS promised to the JVM (can grow to this)
+- **Committed** = What the JVM is actually using right now
+
+### Available Categories
+
+Categories are dynamically extracted from jcmd output at runtime. Common categories include:
+
+| Category | Description |
+|----------|-------------|
+| `total` | **Total JVM memory** (this is your actual container memory usage) |
+| `java.heap` | Heap memory for Java objects |
+| `thread` | Thread stacks (grows with thread count) |
+| `class` | Class metadata (Metaspace in Java 8+) |
+| `code` | JIT-compiled code cache |
+| `gc` | Garbage collector internal structures |
+| `compiler` | JIT compiler overhead |
+| `internal` | JVM internal data structures |
+| `symbol` | Symbol table (class/method names) |
+| `native.memory.tracking` | NMT bookkeeping overhead |
+| `arena.chunk` | Arena-based memory allocation |
+
+**Note**: Available categories vary by Java version (8, 11, 17, 21, etc.) and are auto-discovered from your JVM.
+
+### Example Metrics
+
+```
+# Total container memory (most important for OOM prevention)
+jvm_memory_nmt_committed_bytes{category="total"} 175022080
+
+# Heap usage
+jvm_memory_nmt_committed_bytes{category="java.heap"} 47710208
+
+# Thread stack memory
+jvm_memory_nmt_committed_bytes{category="thread"} 22537216
+
+# Class metadata
+jvm_memory_nmt_committed_bytes{category="class"} 37698560
+```
+
+## Verification
+
+### Check Metrics Are Available
+
+**Spring Boot Actuator:**
+```bash
+# List all NMT metrics
+curl http://localhost:8080/actuator/metrics | grep nmt
+
+# Expected output:
+# "jvm.memory.nmt.reserved"
+# "jvm.memory.nmt.committed"
+```
+
+**Query Specific Category:**
+```bash
+curl http://localhost:8080/actuator/metrics/jvm.memory.nmt.committed?tag=category:thread
+
+# Response shows thread memory usage in bytes
+```
+
+**Prometheus Endpoint:**
+```bash
+curl http://localhost:8080/actuator/prometheus | grep jvm_memory_nmt
+
+# Should show multiple metrics with category labels
+```
+
+### Verify NMT is Enabled
+
+If metrics show `-1` values, NMT is not enabled. Verify with jcmd:
+
+```bash
+# Get JVM process ID
+jps
+
+# Check NMT status
+jcmd <PID> VM.native_memory summary
+
+# Should show memory breakdown, not "Native memory tracking is not enabled"
+```
+
+## Troubleshooting
+
+### Metrics Show -1 Values
+
+**Cause**: JVM not started with `-XX:NativeMemoryTracking=summary`
+
+**Solution**:
+1. Add the flag to JVM startup arguments (see JVM Configuration section)
+2. Restart your application
+3. Verify with `jcmd <PID> VM.native_memory summary`
+
+### No Metrics Appearing
+
+**Possible causes**:
+
+1. **Bean not registered**:
+   - Check `@Configuration` class is component-scanned
+   - Add `@ComponentScan` if needed
+
+2. **Micrometer not on classpath**:
+   - Verify `micrometer-core` dependency is present
+
+3. **Actuator endpoints disabled**:
+   ```properties
+   management.endpoints.web.exposure.include=health,metrics,prometheus
+   ```
+
+4. **Enable debug logging**:
+   ```properties
+   logging.level.com.marekcabaj.nmt=DEBUG
+   ```
+
+### High jcmd Overhead
+
+**Cause**: Cache duration too short with frequent metric scraping
+
+**Solution**: Increase cache duration to match scrape interval:
+```java
+// If Prometheus scrapes every 30 seconds
+new JvmNmtMetrics(Duration.ofSeconds(30))
+```
+
+### Categories Different Than Documentation
+
+**Normal behavior**: Categories vary by JVM version and configuration. The library automatically discovers available categories from your specific JVM.
+
+## Prometheus Queries
+
+### Basic Queries
+
+**Total Container Memory:**
+```promql
+jvm_memory_nmt_committed_bytes{category="total"}
+```
+
+**Thread Memory Growth Detection:**
+```promql
+rate(jvm_memory_nmt_committed_bytes{category="thread"}[5m])
+```
+
+**Top 5 Memory Consumers:**
+```promql
+topk(5, jvm_memory_nmt_committed_bytes)
+```
+
+### Advanced Queries
+
+**Heap vs Off-Heap Memory:**
+```promql
+# Heap
+jvm_memory_nmt_committed_bytes{category="java.heap"}
+
+# Off-heap (Total - Heap)
+jvm_memory_nmt_committed_bytes{category="total"}
+  - jvm_memory_nmt_committed_bytes{category="java.heap"}
+```
+
+**Memory Utilization Percentage:**
+```promql
+(jvm_memory_nmt_committed_bytes{category="total"}
+ / jvm_memory_nmt_reserved_bytes{category="total"}) * 100
+```
+
+**Memory by Category (Stacked):**
+```promql
+jvm_memory_nmt_committed_bytes{category!="total"}
+```
 
 # Contributing
 
