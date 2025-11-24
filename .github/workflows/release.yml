@@ -14,8 +14,11 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
   MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN }}
+  SERVER_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+  SERVER_PASSWORD: ${{ secrets.CENTRAL_TOKEN }}
   MAVEN_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
   MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
 jobs:
   release:
