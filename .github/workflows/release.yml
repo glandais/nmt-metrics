@@ -27,7 +27,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
-          settings-path: settings.xml
+          settings-path: "."
           server-id: central
           server-username: ${{ secrets.CENTRAL_USERNAME }}
           server-password: ${{ secrets.CENTRAL_TOKEN }}
