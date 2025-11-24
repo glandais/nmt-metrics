@@ -1,3 +1,9 @@
+## [3.2.1](https://github.com/glandais/nmt-metrics/compare/v3.2.0...v3.2.1) (2025-11-24)
+
+### Bug Fixes
+
+* maven deploy ([d892cd2](https://github.com/glandais/nmt-metrics/commit/d892cd24024645e0b2bd3f6ca2a5ebeb795fc6a3))
+
 ## [3.2.0](https://github.com/glandais/nmt-metrics/compare/v3.1.0...v3.2.0) (2025-11-24)
 
 ### Features
