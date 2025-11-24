@@ -1,3 +1,9 @@
+## [3.2.12](https://github.com/glandais/nmt-metrics/compare/v3.2.11...v3.2.12) (2025-11-24)
+
+### Bug Fixes
+
+* mvn deploy ([781c245](https://github.com/glandais/nmt-metrics/commit/781c2453d40a3f10fb2045e8e53fabbabd66b572))
+
 ## [3.2.11](https://github.com/glandais/nmt-metrics/compare/v3.2.10...v3.2.11) (2025-11-24)
 
 ### Bug Fixes
