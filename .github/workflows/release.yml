@@ -49,7 +49,7 @@ jobs:
         uses: WasiqB/maven-publish-action@v2.13
         if: success()
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
           settings_path: "deploy/settings/settings.xml"
           server_id: central
