@@ -11,7 +11,7 @@
 
     <groupId>io.github.glandais</groupId>
     <artifactId>nmt-metrics</artifactId>
-    <version>3.2.12</version>
+    <version>3.2.13-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
