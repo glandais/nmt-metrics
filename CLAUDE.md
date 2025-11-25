@@ -149,3 +149,4 @@ This project uses semantic-release for automated versioning and Maven Central pu
 - `fix:` triggers patch version bump
 - `BREAKING CHANGE:` or `!` suffix triggers major version bump
 - GitHub Actions workflow handles release on push to master
+
