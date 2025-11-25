@@ -1,3 +1,9 @@
+## [4.1.0](https://github.com/glandais/nmt-metrics/compare/v4.0.0...v4.1.0) (2025-11-25)
+
+### Features
+
+* trigger release ([52a6974](https://github.com/glandais/nmt-metrics/commit/52a6974df10b37592cf0d2d846f662656b9435b4))
+
 ## [4.0.0](https://github.com/glandais/nmt-metrics/compare/v3.3.0...v4.0.0) (2025-11-25)
 
 ### ⚠ BREAKING CHANGES
