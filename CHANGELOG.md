@@ -1,3 +1,12 @@
+## [4.0.0](https://github.com/glandais/nmt-metrics/compare/v3.3.0...v4.0.0) (2025-11-25)
+
+### ⚠ BREAKING CHANGES
+
+* package structure changed from com.marekcabaj.nmt to
+io.glandais.nmt.metrics. update imports in existing code.
+
+* ♻️ refactor: migrate from jcmd process execution to jmx-based nmt retrieval ([f4d7309](https://github.com/glandais/nmt-metrics/commit/f4d730991af0298f6acae75d4d5d5aa1be507e73))
+
 ## [3.3.0](https://github.com/glandais/nmt-metrics/compare/v3.2.13...v3.3.0) (2025-11-24)
 
 ### Features
