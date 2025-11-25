@@ -1,3 +1,9 @@
+## [4.1.1](https://github.com/glandais/nmt-metrics/compare/v4.1.0...v4.1.1) (2025-11-25)
+
+### Code Refactoring
+
+* **docs:** replace jcmd terminology with nmt and jmx throughout codebase ([267808d](https://github.com/glandais/nmt-metrics/commit/267808d63bd2666a0af57030a3292876df5f587a))
+
 ## [4.1.0](https://github.com/glandais/nmt-metrics/compare/v4.0.0...v4.1.0) (2025-11-25)
 
 ### Features
