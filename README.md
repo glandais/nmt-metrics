@@ -12,7 +12,7 @@ This library exposes JVM [Native Memory Tracking (NMT)](https://docs.oracle.com/
 - Real-time visibility into native (off-heap) memory usage
 - Per-category memory breakdowns (thread, class, GC, code, etc.)
 - Metrics exposed via Prometheus, Grafana, or any Micrometer-compatible backend
-- Automated tracking without manual jcmd commands
+- Automated tracking via JMX integration
 
 ## Why will I ever need Java Native Memory Tracking?
 
@@ -40,7 +40,7 @@ Standard JVM monitoring focuses on **heap memory** (where Java objects live), bu
 - GC internals
 - Direct ByteBuffers
 
-**Without NMT**, diagnosing native memory leaks requires deep Linux internals expertise and manual `jcmd` commands.
+**Without NMT**, diagnosing native memory leaks requires deep Linux internals expertise and manual diagnostics.
 
 **With this library**, you get real-time native memory metrics with per-category breakdowns integrated into your existing monitoring stack.
 
@@ -69,7 +69,7 @@ This library automatically includes:
 - **Micrometer Core** (1.16.0+) - Metrics instrumentation library
 - **SLF4J API** (2.0.17+) - Logging facade
 
-The library uses lightweight time-based caching (10-second default TTL) to optimize jcmd calls and reduce system overhead.
+The library uses lightweight time-based caching (10-second default TTL) to optimize JMX calls and reduce system overhead.
 
 # Usage
 
@@ -151,7 +151,7 @@ public class MyProgram {
 management.metrics.nmt.cache-duration=30s
 ```
 
-**Note**: Cache duration should match or slightly exceed your metrics scrape interval to minimize jcmd overhead while keeping data fresh.
+**Note**: Cache duration should match or slightly exceed your metrics scrape interval to minimize JMX overhead while keeping data fresh.
 
 #### Manual Configuration (Spring Boot 2.x or Custom Setup)
 
@@ -262,7 +262,7 @@ This library exposes [Micrometer gauges](https://docs.micrometer.io/micrometer/r
 
 ### Available Categories
 
-Categories are dynamically extracted from jcmd output at runtime. Common categories include:
+Categories are dynamically extracted from NMT output at runtime. Common categories include:
 
 | Category | Description |
 |----------|-------------|
@@ -370,7 +370,7 @@ jcmd <PID> VM.native_memory summary
    logging.level.io.glandais.nmt.metrics=DEBUG
    ```
 
-### High jcmd Overhead
+### High JMX Overhead
 
 **Cause**: Cache duration too short with frequent metric scraping
 

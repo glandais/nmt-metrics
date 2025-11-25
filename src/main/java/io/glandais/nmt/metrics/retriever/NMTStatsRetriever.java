@@ -38,20 +38,20 @@ public class NMTStatsRetriever {
     public static NativeMemoryTrackingValues retrieveNativeMemoryTrackingValues() {
         try {
             final String output = NMTStatsRetriever.execute("vmNativeMemory", "summary");
-            return extractFromJcmdOutput(output);
+            return extractFromNmtOutput(output);
         } catch (JMException e) {
             LOGGER.error("Failed to retrieve vmNativeMemory summary");
             return new NativeMemoryTrackingValues();
         }
     }
 
-    public static NativeMemoryTrackingValues extractFromJcmdOutput(final String jcmdOutput) {
+    public static NativeMemoryTrackingValues extractFromNmtOutput(final String nmtOutput) {
         final NativeMemoryTrackingValues result = new NativeMemoryTrackingValues();
         for (final NativeMemoryTrackingKind nmtKind : NativeMemoryTrackingKind.values()) {
             result.put(nmtKind, new TreeMap<>());
         }
-        extractTotalProperty(result, jcmdOutput);
-        extractAllCategories(result, jcmdOutput);
+        extractTotalProperty(result, nmtOutput);
+        extractAllCategories(result, nmtOutput);
         LOGGER.debug("Extracted NMT properties : {}", result);
 
         if (result.isEmpty()) {
@@ -61,8 +61,8 @@ public class NMTStatsRetriever {
         return result;
     }
 
-    protected static void extractAllCategories(final NativeMemoryTrackingValues result, final String jcmdOutput) {
-        final Matcher matcher = CATEGORY_PATTERN.matcher(jcmdOutput);
+    protected static void extractAllCategories(final NativeMemoryTrackingValues result, final String nmtOutput) {
+        final Matcher matcher = CATEGORY_PATTERN.matcher(nmtOutput);
         while (matcher.find()) {
             final String categoryString = matcher.group(CATEGORY_PROPERTY);
             final String category = categoryString.replace(' ', '.').toLowerCase();
@@ -75,8 +75,8 @@ public class NMTStatsRetriever {
         }
     }
 
-    protected static void extractTotalProperty(final NativeMemoryTrackingValues result, final String jcmdOutput) {
-        final Matcher matcher = TOTAL_PATTERN.matcher(jcmdOutput);
+    protected static void extractTotalProperty(final NativeMemoryTrackingValues result, final String nmtOutput) {
+        final Matcher matcher = TOTAL_PATTERN.matcher(nmtOutput);
         if (matcher.find()) {
             final long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
             result.get(NativeMemoryTrackingKind.COMMITTED).put("total", committed);

@@ -13,7 +13,7 @@ public class NMTStatsRetrieverTest {
 
     @BeforeEach
     public void setUp() {
-        final String testJcmdOutput = "Total: reserved=1470626KB, committed=170826KB\n" +
+        final String testNmtOutput = "Total: reserved=1470626KB, committed=170826KB\n" +
                 "-                 Java Heap (reserved=65536KB, committed=46592KB)\n" +
                 "                            (mmap: reserved=65536KB, committed=46592KB) \n" +
                 " \n" +
@@ -54,7 +54,7 @@ public class NMTStatsRetrieverTest {
                 " \n" +
                 "-               Arena Chunk (reserved=20262KB, committed=20262KB)\n" +
                 "                            (malloc=20262KB) ";
-        nmtProperties = NMTStatsRetriever.extractFromJcmdOutput(testJcmdOutput);
+        nmtProperties = NMTStatsRetriever.extractFromNmtOutput(testNmtOutput);
     }
 
     @Test

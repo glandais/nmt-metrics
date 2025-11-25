@@ -49,7 +49,7 @@ mvn clean
 **NMTStatsRetriever** (Data Collection & Parsing)
 - Executes `vmNativeMemory` command via JMX DiagnosticCommand MBean
 - Uses ManagementFactory.getPlatformMBeanServer() to invoke native JVM diagnostics
-- Parses jcmd output text into structured data using regex patterns
+- Parses NMT output text into structured data using regex patterns
 - Extracts "Total" line and per-category lines with reserved/committed values
 - Returns `NativeMemoryTrackingValues` (EnumMap structure)
 - Handles errors gracefully by returning empty values
@@ -91,10 +91,10 @@ mvn clean
 ## Development Guidelines
 
 ### JVM Requirement
-This library requires the JVM to be started with `-XX:NativeMemoryTracking=summary` or `-XX:NativeMemoryTracking=detail` flag. Without this flag, jcmd will return no data.
+This library requires the JVM to be started with `-XX:NativeMemoryTracking=summary` or `-XX:NativeMemoryTracking=detail` flag. Without this flag, NMT will return no data.
 
 ### Testing
-Tests parse sample jcmd output from different Java versions (Java 8, 9, 11, 17, 21). When adding support for new Java versions, add corresponding sample outputs and test cases.
+Tests parse sample NMT output from different Java versions (Java 8, 9, 11, 17, 21). When adding support for new Java versions, add corresponding sample outputs and test cases.
 
 **Test Structure:**
 - `JvmNmtMetricsTest` - Integration tests for core metrics functionality
@@ -145,6 +145,7 @@ The 10-second cache prevents excessive JMX calls which can impact performance. W
 ### Release Process
 This project uses semantic-release for automated versioning and Maven Central publishing:
 - Commit messages must follow Conventional Commits format
+- **DO NOT use gitmoji** (emojis) in commit messages - use plain text only
 - `feat:` triggers minor version bump
 - `fix:` triggers patch version bump
 - `BREAKING CHANGE:` or `!` suffix triggers major version bump
