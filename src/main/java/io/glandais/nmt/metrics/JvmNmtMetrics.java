@@ -1,8 +1,8 @@
-package com.marekcabaj.nmt;
+package io.glandais.nmt.metrics;
 
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
-import com.marekcabaj.nmt.jcmd.NMTJcmdRetriever;
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingKind;
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingValues;
+import io.glandais.nmt.metrics.retriever.NMTStatsRetriever;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -23,8 +23,6 @@ public class JvmNmtMetrics implements MeterBinder {
     private MeterRegistry meterRegistry;
 
     private final Map<String, List<Meter>> meters;
-
-    private final NMTJcmdRetriever nmtJcmdRetriever;
 
     private final Duration cacheDuration;
 
@@ -54,7 +52,6 @@ public class JvmNmtMetrics implements MeterBinder {
     public JvmNmtMetrics(final Duration cacheDuration) {
         super();
         this.meters = Collections.synchronizedMap(new TreeMap<>());
-        this.nmtJcmdRetriever = new NMTJcmdRetriever();
         this.cacheDuration = cacheDuration;
     }
 
@@ -94,7 +91,7 @@ public class JvmNmtMetrics implements MeterBinder {
     }
 
     protected NativeMemoryTrackingValues computeVmNativeMemorySummary() {
-        final NativeMemoryTrackingValues result = this.nmtJcmdRetriever.retrieveNativeMemoryTrackingValues();
+        final NativeMemoryTrackingValues result = NMTStatsRetriever.retrieveNativeMemoryTrackingValues();
         updateMeters(result);
         return result;
     }

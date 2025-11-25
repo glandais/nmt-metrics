@@ -107,8 +107,9 @@ implementation 'io.github.glandais:nmt-metrics:<!-- latest version -->'
 Create a `JvmNmtMetrics` instance and bind it to your Micrometer registry:
 
 ```java
-import com.marekcabaj.nmt.JvmNmtMetrics;
+import io.glandais.nmt.metrics.JvmNmtMetrics;
 import io.micrometer.core.instrument.Metrics;
+
 import java.time.Duration;
 
 public class MyProgram {
@@ -129,11 +130,10 @@ public class MyProgram {
 Add a `JvmNmtMetrics` bean in your context via a `@Configuration`:
 
 ```java
-import com.marekcabaj.nmt.JvmNmtMetrics;
+import io.glandais.nmt.metrics.JvmNmtMetrics;
 import io.micrometer.core.instrument.MeterBinder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.time.Duration;
 
 @Configuration
 public class JvmMetricsConfiguration {
@@ -339,7 +339,7 @@ jcmd <PID> VM.native_memory summary
 
 4. **Enable debug logging**:
    ```properties
-   logging.level.com.marekcabaj.nmt=DEBUG
+   logging.level.io.glandais.nmt.metrics=DEBUG
    ```
 
 ### High jcmd Overhead

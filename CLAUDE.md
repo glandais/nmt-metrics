@@ -7,11 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Java library that exposes JVM Native Memory Tracking (NMT) metrics to Micrometer, making them available through Spring Boot Actuator. It helps diagnose memory issues in containerized Java applications where OOM errors are harder to debug.
 
 **Technology Stack:**
-- Java 21
-- Spring Boot 3.5.8
+- Java 11+ (minimum requirement)
 - Maven build system
-- Micrometer Core (metrics library)
-- Caffeine (caching)
+- Micrometer Core 1.16.0+ (metrics library)
+- SLF4J 2.0.17+ (logging)
+- No external dependencies for caching (uses custom lightweight cache)
 
 ## Build Commands
 
@@ -23,7 +23,7 @@ mvn clean install
 mvn test
 
 # Run a single test
-mvn test -Dtest=NMTExtractorTest
+mvn test -Dtest=NMTStatsRetrieverTest
 
 # Package without tests
 mvn package -DskipTests
@@ -39,39 +39,37 @@ mvn clean
 **JvmNmtMetrics** (Main Entry Point)
 - Implements Micrometer's `MeterBinder` interface
 - Manages registration of NMT gauges with MeterRegistry
-- Uses Caffeine cache (default 10s TTL) to avoid excessive jcmd calls
+- Uses lightweight time-based cache (default 10s TTL) via `CachedValue` inner class
 - Dynamically adds/removes meters based on available NMT categories
 - Creates two gauge types per category: `jvm.memory.nmt.reserved` and `jvm.memory.nmt.committed`
+- Converts KB values from NMT to bytes for Micrometer
 
-**NMTJcmdRetriever** (Data Collection Layer)
-- Coordinates between command execution and parsing
-- Runs `VM.native_memory summary` jcmd command
-- Delegates to JcmdCommandRunner for execution and NMTPropertiesExtractor for parsing
-
-**JcmdCommandRunner** (System Integration)
-- Executes jcmd commands against the current JVM process
-- Auto-detects OS (Unix/Windows) to use correct jcmd binary path
-- Retrieves current process PID via ManagementFactory
-- Handles cross-platform execution (Unix: `./jcmd`, Windows: `jcmd`)
-
-**NMTPropertiesExtractor** (Parser)
-- Parses jcmd output text into structured data
-- Extracts reserved and committed memory values per category
+**NMTStatsRetriever** (Data Collection & Parsing)
+- Executes `vmNativeMemory` command via JMX DiagnosticCommand MBean
+- Uses ManagementFactory.getPlatformMBeanServer() to invoke native JVM diagnostics
+- Parses jcmd output text into structured data using regex patterns
+- Extracts "Total" line and per-category lines with reserved/committed values
 - Returns `NativeMemoryTrackingValues` (EnumMap structure)
+- Handles errors gracefully by returning empty values
 
 **NativeMemoryTrackingValues** (Data Model)
 - EnumMap<NativeMemoryTrackingKind, Map<String, Long>>
 - NativeMemoryTrackingKind: RESERVED or COMMITTED
 - Inner map: category name → memory in KB
+- TreeMap used for sorted category output
 
 ### Data Flow
 
-1. MeterRegistry requests metric value
-2. JvmNmtMetrics checks cache (Caffeine)
-3. On cache miss: NMTJcmdRetriever → JcmdCommandRunner → jcmd execution
-4. NMTPropertiesExtractor parses output
-5. Result cached and meters updated
-6. Dynamic meter registration: new categories add meters, removed categories cleanup meters
+1. MeterRegistry requests metric value via gauge
+2. JvmNmtMetrics.getValue() called → checks cache via getVmNativeMemorySummary()
+3. Cache hit: return cached value (double-checked locking pattern)
+4. Cache miss (synchronized):
+   - NMTStatsRetriever.retrieveNativeMemoryTrackingValues()
+   - Execute JMX command via DiagnosticCommand MBean
+   - Parse output with regex (TOTAL_PATTERN and CATEGORY_PATTERN)
+   - Update meters dynamically (add new categories, remove old ones)
+   - Store result in cache with expiry timestamp
+5. Convert KB to bytes and return to gauge
 
 ## Development Guidelines
 
@@ -82,12 +80,45 @@ This library requires the JVM to be started with `-XX:NativeMemoryTracking=summa
 Tests parse sample jcmd output from different Java versions (Java 8, 9, 11, 17, 21). When adding support for new Java versions, add corresponding sample outputs and test cases.
 
 ### Package Structure
-- `com.marekcabaj.nmt` - Main MeterBinder implementation
-- `com.marekcabaj.nmt.jcmd` - jcmd command execution and parsing
-- `com.marekcabaj.nmt.bean` - Data models (enums and value objects)
+- `io.glandais.nmt.metrics` - Main MeterBinder implementation (JvmNmtMetrics)
+- `io.glandais.nmt.metrics.retriever` - NMT data retrieval and parsing (NMTStatsRetriever)
+- `io.glandais.nmt.metrics.bean` - Data models (NativeMemoryTrackingKind enum, NativeMemoryTrackingValues)
+
+### Key Implementation Details
+
+**Caching Mechanism**
+- Custom lightweight cache using volatile CachedValue with expiry timestamp
+- Double-checked locking pattern for thread-safe cache updates
+- No external dependencies (previously considered Caffeine, now removed)
+- Cache invalidation based on time, not access patterns
+
+**JMX Integration**
+- Uses DiagnosticCommand MBean (`com.sun.management:type=DiagnosticCommand`)
+- Invokes `vmNativeMemory` operation with `["summary"]` argument
+- No external process execution - pure JMX approach
+- Fallback to empty values on JMException (e.g., NMT not enabled)
+
+**Regex Patterns**
+```java
+// Matches: "Total: reserved=123456KB, committed=78901KB"
+TOTAL_PATTERN
+
+// Matches: "- Category Name (reserved=123KB, committed=456KB)"
+CATEGORY_PATTERN
+```
+Category names are normalized: spaces → dots, lowercase (e.g., "Java Heap" → "java.heap")
 
 ### Caching Strategy
-The 10-second cache prevents excessive jcmd calls which can impact performance. When modifying caching behavior, consider:
+The 10-second cache prevents excessive JMX calls which can impact performance. When modifying caching behavior, consider:
 - Metrics scrape intervals (typically 10-60s)
-- jcmd execution overhead (~10-50ms)
+- JMX invocation overhead (~10-50ms)
 - Memory consumption vs freshness trade-offs
+- Cache is duration-based (not LRU/access-based)
+
+### Release Process
+This project uses semantic-release for automated versioning and Maven Central publishing:
+- Commit messages must follow Conventional Commits format
+- `feat:` triggers minor version bump
+- `fix:` triggers patch version bump
+- `BREAKING CHANGE:` or `!` suffix triggers major version bump
+- GitHub Actions workflow handles release on push to master

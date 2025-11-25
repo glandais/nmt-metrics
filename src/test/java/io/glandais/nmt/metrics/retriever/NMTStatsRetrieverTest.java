@@ -1,13 +1,13 @@
-package com.marekcabaj.nmt.jcmd;
+package io.glandais.nmt.metrics.retriever;
 
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingKind;
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingValues;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class NMTExtractorTest {
+public class NMTStatsRetrieverTest {
 
     private NativeMemoryTrackingValues nmtProperties;
 
@@ -54,7 +54,7 @@ public class NMTExtractorTest {
                 " \n" +
                 "-               Arena Chunk (reserved=20262KB, committed=20262KB)\n" +
                 "                            (malloc=20262KB) ";
-        nmtProperties = new NMTPropertiesExtractor().extractFromJcmdOutput(testJcmdOutput);
+        nmtProperties = NMTStatsRetriever.extractFromJcmdOutput(testJcmdOutput);
     }
 
     @Test

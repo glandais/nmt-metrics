@@ -126,6 +126,15 @@
                 </configuration>
             </plugin>
 
+            <!-- Surefire Plugin for running tests with NMT enabled -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-XX:NativeMemoryTracking=summary</argLine>
+                </configuration>
+            </plugin>
+
             <!-- GPG Signing for Maven Central -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

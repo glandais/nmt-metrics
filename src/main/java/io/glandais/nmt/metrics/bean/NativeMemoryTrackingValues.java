@@ -1,4 +1,4 @@
-package com.marekcabaj.nmt.bean;
+package io.glandais.nmt.metrics.bean;
 
 import java.util.EnumMap;
 import java.util.Map;

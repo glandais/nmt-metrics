@@ -1,18 +1,20 @@
-package com.marekcabaj.nmt.jcmd;
+package io.glandais.nmt.metrics.retriever;
 
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingKind;
+import io.glandais.nmt.metrics.bean.NativeMemoryTrackingValues;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.management.JMException;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class NMTStatsRetriever {
 
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingKind;
-import com.marekcabaj.nmt.bean.NativeMemoryTrackingValues;
-
-class NMTPropertiesExtractor {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NMTPropertiesExtractor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NMTStatsRetriever.class);
 
     private static final String RESERVED_PROPERTY = "reserved";
     private static final String COMMITTED_PROPERTY = "committed";
@@ -25,11 +27,25 @@ class NMTPropertiesExtractor {
     private static final Pattern TOTAL_PATTERN = Pattern.compile(
             "Total: reserved=(?<" + RESERVED_PROPERTY + ">\\d*)KB, committed=(?<" + COMMITTED_PROPERTY + ">\\d*)KB");
 
-    public NMTPropertiesExtractor() {
-        super();
+    public static String execute(String command, String... args) throws JMException {
+        return (String) ManagementFactory.getPlatformMBeanServer().invoke(
+                new ObjectName("com.sun.management:type=DiagnosticCommand"),
+                command,
+                new Object[]{args},
+                new String[]{"[Ljava.lang.String;"});
     }
 
-    public NativeMemoryTrackingValues extractFromJcmdOutput(final String jcmdOutput) {
+    public static NativeMemoryTrackingValues retrieveNativeMemoryTrackingValues() {
+        try {
+            final String output = NMTStatsRetriever.execute("vmNativeMemory", "summary");
+            return extractFromJcmdOutput(output);
+        } catch (JMException e) {
+            LOGGER.error("Failed to retrieve vmNativeMemory summary");
+            return new NativeMemoryTrackingValues();
+        }
+    }
+
+    public static NativeMemoryTrackingValues extractFromJcmdOutput(final String jcmdOutput) {
         final NativeMemoryTrackingValues result = new NativeMemoryTrackingValues();
         for (final NativeMemoryTrackingKind nmtKind : NativeMemoryTrackingKind.values()) {
             result.put(nmtKind, new TreeMap<>());
@@ -45,7 +61,7 @@ class NMTPropertiesExtractor {
         return result;
     }
 
-    protected void extractAllCategories(final NativeMemoryTrackingValues result, final String jcmdOutput) {
+    protected static void extractAllCategories(final NativeMemoryTrackingValues result, final String jcmdOutput) {
         final Matcher matcher = CATEGORY_PATTERN.matcher(jcmdOutput);
         while (matcher.find()) {
             final String categoryString = matcher.group(CATEGORY_PROPERTY);
@@ -59,7 +75,7 @@ class NMTPropertiesExtractor {
         }
     }
 
-    protected void extractTotalProperty(final NativeMemoryTrackingValues result, final String jcmdOutput) {
+    protected static void extractTotalProperty(final NativeMemoryTrackingValues result, final String jcmdOutput) {
         final Matcher matcher = TOTAL_PATTERN.matcher(jcmdOutput);
         if (matcher.find()) {
             final long committed = Long.parseLong(matcher.group(COMMITTED_PROPERTY));
