@@ -2,16 +2,16 @@ package io.glandais.nmt.metrics.retriever;
 
 import io.glandais.nmt.metrics.bean.NativeMemoryTrackingKind;
 import io.glandais.nmt.metrics.bean.NativeMemoryTrackingValues;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NMTStatsRetrieverTest {
 
     private NativeMemoryTrackingValues nmtProperties;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         final String testJcmdOutput = "Total: reserved=1470626KB, committed=170826KB\n" +
                 "-                 Java Heap (reserved=65536KB, committed=46592KB)\n" +

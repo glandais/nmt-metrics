@@ -127,13 +127,43 @@ public class MyProgram {
 
 ### Spring Boot Applications
 
-Add a `JvmNmtMetrics` bean in your context via a `@Configuration`:
+#### Automatic Configuration (Recommended)
+
+**Spring Boot 3.x/4.x** applications benefit from automatic configuration. Simply add the dependency, and NMT metrics will be registered automatically:
+
+```xml
+<dependency>
+    <groupId>io.github.glandais</groupId>
+    <artifactId>nmt-metrics</artifactId>
+    <version><!-- latest version --></version>
+</dependency>
+```
+
+**No code required!** The library auto-configures itself when:
+- Spring Boot is detected
+- Micrometer is on the classpath
+- A `MeterRegistry` bean is available
+
+**Customize via application.properties:**
+
+```properties
+# Optional: Adjust cache duration (default: 10s)
+management.metrics.nmt.cache-duration=30s
+```
+
+**Note**: Cache duration should match or slightly exceed your metrics scrape interval to minimize jcmd overhead while keeping data fresh.
+
+#### Manual Configuration (Spring Boot 2.x or Custom Setup)
+
+For Spring Boot 2.x or when you need custom control, add a `JvmNmtMetrics` bean via `@Configuration`:
 
 ```java
 import io.glandais.nmt.metrics.JvmNmtMetrics;
 import io.micrometer.core.instrument.MeterBinder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 @Configuration
 public class JvmMetricsConfiguration {
@@ -148,8 +178,6 @@ public class JvmMetricsConfiguration {
     }
 }
 ```
-
-**Note**: Cache duration should match or slightly exceed your metrics scrape interval to minimize jcmd overhead while keeping data fresh.
 
 ## JVM Configuration
 

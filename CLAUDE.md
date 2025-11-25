@@ -11,6 +11,7 @@ This is a Java library that exposes JVM Native Memory Tracking (NMT) metrics to 
 - Maven build system
 - Micrometer Core 1.16.0+ (metrics library)
 - SLF4J 2.0.17+ (logging)
+- Spring Boot 3.x/4.x (optional - for auto-configuration)
 - No external dependencies for caching (uses custom lightweight cache)
 
 ## Build Commands
@@ -43,6 +44,7 @@ mvn clean
 - Dynamically adds/removes meters based on available NMT categories
 - Creates two gauge types per category: `jvm.memory.nmt.reserved` and `jvm.memory.nmt.committed`
 - Converts KB values from NMT to bytes for Micrometer
+- Supports configurable cache duration via constructor: `new JvmNmtMetrics(Duration.ofSeconds(30))`
 
 **NMTStatsRetriever** (Data Collection & Parsing)
 - Executes `vmNativeMemory` command via JMX DiagnosticCommand MBean
@@ -57,6 +59,21 @@ mvn clean
 - NativeMemoryTrackingKind: RESERVED or COMMITTED
 - Inner map: category name → memory in KB
 - TreeMap used for sorted category output
+
+### Spring Boot Auto-Configuration
+
+**JvmNmtMetricsAutoConfiguration** (Spring Boot 3.x/4.x)
+- Automatically registers `JvmNmtMetrics` bean when Spring Boot and Micrometer are detected
+- Uses `@ConditionalOnClass({MeterRegistry.class, JvmNmtMetrics.class})` for activation
+- Uses `@ConditionalOnMissingBean` to allow user override
+- Registered via `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Spring Boot dependencies are `<optional>true</optional>` - library works without Spring Boot
+
+**JvmNmtMetricsProperties** (Configuration Properties)
+- Prefix: `management.metrics.nmt`
+- Property: `cache-duration` (Duration, default: 10s)
+- Example: `management.metrics.nmt.cache-duration=30s` in application.properties
+- Metadata file: `META-INF/spring-configuration-metadata.json` for IDE autocomplete
 
 ### Data Flow
 
@@ -79,8 +96,18 @@ This library requires the JVM to be started with `-XX:NativeMemoryTracking=summa
 ### Testing
 Tests parse sample jcmd output from different Java versions (Java 8, 9, 11, 17, 21). When adding support for new Java versions, add corresponding sample outputs and test cases.
 
+**Test Structure:**
+- `JvmNmtMetricsTest` - Integration tests for core metrics functionality
+- `NMTStatsRetrieverTest` - Unit tests for NMT data parsing
+- `JvmNmtMetricsAutoConfigurationTest` - Spring Boot auto-configuration tests
+
+**Testing Framework:** JUnit 5 (Jupiter)
+- All tests use JUnit 5 annotations: `@Test` from `org.junit.jupiter.api.Test`
+- Use JUnit 5 assertions: `org.junit.jupiter.api.Assertions.*`
+
 ### Package Structure
 - `io.glandais.nmt.metrics` - Main MeterBinder implementation (JvmNmtMetrics)
+- `io.glandais.nmt.metrics.autoconfigure` - Spring Boot auto-configuration (JvmNmtMetricsAutoConfiguration, JvmNmtMetricsProperties)
 - `io.glandais.nmt.metrics.retriever` - NMT data retrieval and parsing (NMTStatsRetriever)
 - `io.glandais.nmt.metrics.bean` - Data models (NativeMemoryTrackingKind enum, NativeMemoryTrackingValues)
 

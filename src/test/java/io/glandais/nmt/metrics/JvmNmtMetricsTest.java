@@ -1,19 +1,18 @@
 package io.glandais.nmt.metrics;
 
-import io.glandais.nmt.metrics.JvmNmtMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test for JvmNmtMetrics.
@@ -24,7 +23,7 @@ public class JvmNmtMetricsTest {
     private SimpleMeterRegistry registry;
     private JvmNmtMetrics jvmNmtMetrics;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         registry = new SimpleMeterRegistry();
         jvmNmtMetrics = new JvmNmtMetrics();
@@ -37,7 +36,7 @@ public class JvmNmtMetricsTest {
 
         // Then
         List<Meter> meters = registry.getMeters();
-        assertFalse("Meters should be registered", meters.isEmpty());
+        assertFalse(meters.isEmpty(), "Meters should be registered");
 
         // Verify we have both reserved and committed metrics
         long reservedCount = meters.stream()
@@ -47,9 +46,9 @@ public class JvmNmtMetricsTest {
                 .filter(m -> m.getId().getName().equals("jvm.memory.nmt.committed"))
                 .count();
 
-        assertTrue("Should have reserved metrics", reservedCount > 0);
-        assertTrue("Should have committed metrics", committedCount > 0);
-        assertEquals("Reserved and committed counts should match", reservedCount, committedCount);
+        assertTrue(reservedCount > 0, "Should have reserved metrics");
+        assertTrue(committedCount > 0, "Should have committed metrics");
+        assertEquals(reservedCount, committedCount, "Reserved and committed counts should match");
     }
 
     @Test
@@ -68,10 +67,10 @@ public class JvmNmtMetricsTest {
         categories.forEach(category -> System.out.println("  - " + category));
         System.out.println("=== Total Categories: " + categories.size() + " ===");
 
-        assertFalse("Should discover at least one category", categories.isEmpty());
+        assertFalse(categories.isEmpty(), "Should discover at least one category");
 
         // total category should always be present when NMT is enabled (lowercase in newer Java versions)
-        assertTrue("total category should be present", categories.contains("total"));
+        assertTrue(categories.contains("total"), "total category should be present");
     }
 
     @Test
@@ -85,7 +84,7 @@ public class JvmNmtMetricsTest {
                 .map(m -> (Gauge) m)
                 .collect(Collectors.toList());
 
-        assertFalse("Should have gauge metrics", gauges.isEmpty());
+        assertFalse(gauges.isEmpty(), "Should have gauge metrics");
 
         System.out.println("=== NMT Metric Values ===");
         gauges.forEach(gauge -> {
@@ -100,18 +99,17 @@ public class JvmNmtMetricsTest {
         Gauge totalReserved = registry.find("jvm.memory.nmt.reserved")
                 .tag("category", "total")
                 .gauge();
-        assertNotNull("total reserved metric should exist", totalReserved);
-        assertTrue("total reserved should be positive", totalReserved.value() > 0);
+        assertNotNull(totalReserved, "total reserved metric should exist");
+        assertTrue(totalReserved.value() > 0, "total reserved should be positive");
 
         Gauge totalCommitted = registry.find("jvm.memory.nmt.committed")
                 .tag("category", "total")
                 .gauge();
-        assertNotNull("total committed metric should exist", totalCommitted);
-        assertTrue("total committed should be positive", totalCommitted.value() > 0);
+        assertNotNull(totalCommitted, "total committed metric should exist");
+        assertTrue(totalCommitted.value() > 0, "total committed should be positive");
 
         // Committed should be less than or equal to reserved
-        assertTrue("Committed should be <= reserved",
-                totalCommitted.value() <= totalReserved.value());
+        assertTrue(totalCommitted.value() <= totalReserved.value(), "Committed should be <= reserved");
     }
 
     @Test
@@ -127,7 +125,7 @@ public class JvmNmtMetricsTest {
         Gauge gauge = testRegistry.find("jvm.memory.nmt.reserved")
                 .tag("category", "total")
                 .gauge();
-        assertNotNull("Metric should exist", gauge);
+        assertNotNull(gauge, "Metric should exist");
         double firstValue = gauge.value();
 
         // Wait for cache to expire
@@ -137,8 +135,8 @@ public class JvmNmtMetricsTest {
         double secondValue = gauge.value();
 
         // Values might be the same or different, but both should be positive
-        assertTrue("First value should be positive", firstValue > 0);
-        assertTrue("Second value should be positive", secondValue > 0);
+        assertTrue(firstValue > 0, "First value should be positive");
+        assertTrue(secondValue > 0, "Second value should be positive");
     }
 
     @Test
@@ -151,21 +149,21 @@ public class JvmNmtMetricsTest {
 
         for (Meter meter : meters) {
             // Verify base unit is set to bytes
-            assertEquals("Base unit should be bytes", "bytes", meter.getId().getBaseUnit());
+            assertEquals("bytes", meter.getId().getBaseUnit(), "Base unit should be bytes");
 
             // Verify description exists
             String description = meter.getId().getDescription();
-            assertNotNull("Description should not be null", description);
-            assertFalse("Description should not be empty", description.trim().isEmpty());
+            assertNotNull(description, "Description should not be null");
+            assertFalse(description.trim().isEmpty(), "Description should not be empty");
 
             // Verify description mentions reserved or committed
             String name = meter.getId().getName();
             if (name.contains("reserved")) {
-                assertTrue("Reserved metric description should mention 'reserved'",
-                        description.toLowerCase().contains("reserved"));
+                assertTrue(description.toLowerCase().contains("reserved"),
+                        "Reserved metric description should mention 'reserved'");
             } else if (name.contains("committed")) {
-                assertTrue("Committed metric description should mention 'committed'",
-                        description.toLowerCase().contains("committed"));
+                assertTrue(description.toLowerCase().contains("committed"),
+                        "Committed metric description should mention 'committed'");
             }
         }
     }
