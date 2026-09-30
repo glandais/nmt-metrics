@@ -3,6 +3,8 @@ updates:
   # Maven dependencies
   - package-ecosystem: "maven"
     directory: "/"
+    assignees:
+      - "glandais"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
@@ -19,6 +21,8 @@ updates:
   # npm dependencies
   - package-ecosystem: "npm"
     directory: "/"
+    assignees:
+      - "glandais"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
@@ -35,6 +39,8 @@ updates:
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    assignees:
+      - "glandais"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
